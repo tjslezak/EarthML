@@ -133,6 +133,37 @@ sources:
         y: 256
       storage_options: {'anon': True}
 
+  aws_naip:
+    description: NAIP analytic imagery from AWS S3
+    driver: rasterio
+    parameters:
+      state:
+        description: State abbreviation
+        type: str
+      year:
+        description: Year acquired
+        type: int
+      res:
+        description: Spatial resolution of imagery
+        type: str
+      quad:
+        description: USGS quadrangle
+        type: int
+      fn: 
+        description: Filename
+        type: str
+    cache:
+      - argkey: urlpath
+        regex: 'naip-analytic'
+        type: file
+    args:
+      urlpath: s3://naip-analytic/{{ state }}/{{ year }}/{{ res }}/{{ quad }}/{{ fn }}.MRF
+      chunks:
+        band: 1
+        x: 512
+        y: 512
+      storage_options: {'anon': True}
+
   fluxnet_daily:
     driver: csv
     parameters:
