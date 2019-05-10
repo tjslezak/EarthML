@@ -1,0 +1,133 @@
+sources:
+  google_landsat_band:
+    description: Landsat bands from Google Cloud Storage
+    driver: rasterio
+    parameters:
+      path:
+        description: landsat path
+        type: int
+      row:
+        description: landsat row
+        type: int
+      product_id:
+        description: landsat file id
+        type: str
+      band:
+        description: band
+        type: int
+    cache:
+      - argkey: urlpath
+        regex: 'gcp-public-data-landsat'
+        type: file
+    args:
+      urlpath: https://storage.googleapis.com/gcp-public-data-landsat/LC08/01/{{ '%03d' % path }}/{{ '%03d' % row }}/{{ product_id }}/{{ product_id }}_B{{ band }}.TIF
+      chunks:
+        band: 1
+        x: 256
+        y: 256
+
+  amazon_landsat_band:
+    description: Landsat bands from Amazon Web Services S3
+    driver: rasterio
+    parameters:
+      path:
+        description: landsat path
+        type: int
+      row:
+        description: landsat row
+        type: int
+      product_id:
+        description: landsat file id
+        type: str
+      band:
+        description: band
+        type: int
+    cache:
+      - argkey: urlpath
+        regex: 'landsat-pds'
+        type: file
+    args:
+      urlpath: s3://landsat-pds/c1/L8/{{ '%03d' % path }}/{{ '%03d' % row }}/{{ product_id }}/{{ product_id }}_B{{ band }}.TIF
+      chunks:
+        band: 1
+        x: 256
+        y: 256
+      storage_options: {'anon': True}
+
+  aws_naip:
+    description: NAIP analytic imagery from AWS S3
+    driver: rasterio
+    parameters:
+      state:
+        description: State abbreviation
+        type: str
+      year:
+        description: Year acquired
+        type: int
+      res:
+        description: Spatial resolution of imagery
+        type: str
+      quad:
+        description: USGS quadrangle
+        type: int
+      fn: 
+        description: Filename
+        type: str
+    cache:
+      - argkey: urlpath
+        regex: 'naip-analytic'
+        type: file
+    args:
+      urlpath: s3://naip-analytic/{{ state }}/{{ year }}/{{ res }}/{{ quad }}/{{ fn }}.MRF
+      chunks:
+        band: 1
+        x: 512
+        y: 512
+      storage_options: {'anon': True}
+
+  fluxnet_daily:
+    driver: csv
+    parameters:
+      s3_path:
+        description: Filename to load
+        type: str
+        default: earth-data/carbon_flux/nee_data_fusion/FLX_AR-SLu_FLUXNET2015_FULLSET_DD_2009-2011_1-3.csv
+    cache:
+      - argkey: urlpath
+        regex: 'earth-data'
+        type: file
+    args:
+      urlpath: "s3://{{ s3_path }}"
+      path_as_pattern: 'FLX_{site}_FLUXNET2015_FULLSET_DD_{}.csv'
+      csv_kwargs:
+        assume_missing: true
+        na_values: [-9999]
+        parse_dates: ['TIMESTAMP']
+      storage_options: {'anon': True}
+
+  fluxnet_metadata:
+    driver: csv
+    cache:
+      - argkey: urlpath
+        regex: 'earth-data'
+        type: file
+    args:
+      urlpath: "s3://earth-data/carbon_flux/nee_data_fusion/allflux_metadata.txt"
+      csv_kwargs:
+        header: null
+        names: ['site', 'lat', 'lon', 'igbp', 'network']
+        usecols: ['site', 'lat', 'lon', 'igbp']
+      storage_options: {'anon': True}
+
+  seattle_lidar:
+    driver: csv
+    cache: 
+      - argkey: urlpath
+        regex: 'https://s3.amazonaws.com/earth-data'
+        type: compressed
+        decomp: infer
+    args:
+      urlpath: "https://s3.amazonaws.com/earth-data/seattle-lidar.zip"
+      storage_options: {'anon': True}
+    metadata:
+      crs: State Plane Coordinate System Washington North FIPS 4601      
